@@ -21,8 +21,6 @@
 #include "process_to_wv.h"
 #include "rtoarmadillo.h"
 
-using namespace Rcpp;
-
 //' @title ARMA Adapter to ARMA to WV Process function
 //' @description Molds the data so that it works with the arma_to_wv function.
 //' @param theta A \code{vec} that contains all the parameter estimates.
@@ -335,7 +333,7 @@ arma::mat derivative_first_matrix(const arma::vec& theta,
     std::string element_type = desc[i];
     
     // AR 1
-    if(element_type == "AR1"){
+    if(element_type == "AR1" || element_type == "GM"){
 
       ++i_theta;
       double sig2 = theta(i_theta);
@@ -421,7 +419,7 @@ arma::mat D_matrix(const arma::vec& theta,
     std::string element_type = desc[i];
     
     // AR 1
-    if(element_type == "AR1"){
+    if(element_type == "AR1" || element_type == "GM"){
       
       ++i_theta;
       double sig2 = theta(i_theta);

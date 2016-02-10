@@ -59,8 +59,6 @@
 // Covariance matrix
 #include "covariance_matrix.h"
 
-using namespace Rcpp;
-
 //' @title Bootstrap for Matrix V
 //' @description Using the bootstrap approach, we simulate a model based on user supplied parameters, obtain the wavelet variance, and then V.
 //' @param theta A \code{vector} with dimensions N x 1 that contains user-supplied initial values for parameters
@@ -87,8 +85,7 @@ arma::mat cov_bootstrapper(const arma::vec&  theta,
     arma::vec x = gen_model(N, theta, desc, objdesc);
     
     // MODWT transform
-    arma::field<arma::vec> signal_modwt = modwt_cpp(x, "haar", nb_level, "periodic");
-    arma::field<arma::vec> signal_modwt_bw = brick_wall(signal_modwt, haar_filter(), "modwt");
+    arma::field<arma::vec> signal_modwt_bw = modwt_cpp(x, "haar", nb_level, "periodic", true);
     
     // Obtain WV
     arma::vec wv_x = wave_variance(signal_modwt_bw, robust, eff);
@@ -137,11 +134,8 @@ arma::mat optimism_bootstrapper(const arma::vec&  theta,
     // Generate x_t ~ F_theta
     arma::vec x = gen_model(N, theta, desc, objdesc);
     
-    // MODWT transform
-    arma::field<arma::vec> signal_modwt = modwt_cpp(x, "haar", nb_level, "periodic");
-    
     // Obtain WV and confidence intervals
-    arma::mat wvar = wvar_cpp(signal_modwt, robust, eff, alpha, "eta3", "haar");
+    arma::mat wvar = modwt_wvar_cpp(x, nb_level, robust, eff, alpha, "eta3", "haar");
     
     // Obtain the Omega matrix (CI HI, CI LO)
     arma::mat omega = arma::inv(fast_cov_cpp(wvar.col(2), wvar.col(1)));
@@ -201,11 +195,8 @@ arma::field<arma::mat> opt_n_gof_bootstrapper(const arma::vec&  theta,
     // Generate x_t ~ F_theta
     arma::vec x = gen_model(N, theta, desc, objdesc);
     
-    // MODWT transform
-    arma::field<arma::vec> signal_modwt = modwt_cpp(x, "haar", nb_level, "periodic");
-    
     // Obtain WV and confidence intervals
-    arma::mat wvar = wvar_cpp(signal_modwt, robust, eff, alpha, "eta3", "haar");
+    arma::mat wvar = modwt_wvar_cpp(x, nb_level, robust, eff, alpha, "eta3", "haar");
     
     // Obtain the Omega matrix (CI HI, CI LO)
     arma::mat omega = arma::inv(fast_cov_cpp(wvar.col(2), wvar.col(1)));
@@ -281,11 +272,8 @@ arma::vec gmwm_sd_bootstrapper(const arma::vec&  theta,
     // Generate x_t ~ F_theta
     arma::vec x = gen_model(N, theta, desc, objdesc);
     
-    // MODWT transform
-    arma::field<arma::vec> signal_modwt = modwt_cpp(x, "haar", nb_level, "periodic");
-    
     // Obtain WV and confidence intervals
-    arma::mat wvar = wvar_cpp(signal_modwt, robust, eff, alpha, "eta3", "haar");
+    arma::mat wvar = modwt_wvar_cpp(x, nb_level, robust, eff, alpha, "eta3", "haar");
     
     // Obtain the Omega matrix (CI HI, CI LO)
     arma::mat omega = arma::inv(fast_cov_cpp(wvar.col(2), wvar.col(1)));
@@ -374,11 +362,8 @@ arma::field<arma::mat> gmwm_param_bootstrapper(const arma::vec&  theta,
     // Generate x_t ~ F_theta
     arma::vec x = gen_model(N, theta, desc, objdesc);
     
-    // MODWT transform
-    arma::field<arma::vec> signal_modwt = modwt_cpp(x, "haar", nb_level, "periodic");
-    
     // Obtain WV and confidence intervals
-    arma::mat wvar = wvar_cpp(signal_modwt, robust, eff, alpha, "eta3", "haar");
+    arma::mat wvar = modwt_wvar_cpp(x, nb_level, robust, eff, alpha, "eta3", "haar");
     
     // Obtain the Omega matrix (CI HI, CI LO)
     arma::mat omega = arma::inv(fast_cov_cpp(wvar.col(2), wvar.col(1)));
@@ -437,11 +422,8 @@ arma::field<arma::mat> all_bootstrapper(const arma::vec&  theta,
     // Generate x_t ~ F_theta
     arma::vec x = gen_model(N, theta, desc, objdesc);
     
-    // MODWT transform
-    arma::field<arma::vec> signal_modwt = modwt_cpp(x, "haar", nb_level, "periodic");
-    
     // Obtain WV and confidence intervals
-    arma::mat wvar = wvar_cpp(signal_modwt, robust, eff, alpha, "eta3", "haar");
+    arma::mat wvar = modwt_wvar_cpp(x, nb_level, robust, eff, alpha, "eta3", "haar");
     
     // Obtain the Omega matrix (CI HI, CI LO)
     arma::mat omega = arma::inv(fast_cov_cpp(wvar.col(2), wvar.col(1)));
@@ -450,8 +432,11 @@ arma::field<arma::mat> all_bootstrapper(const arma::vec&  theta,
     
     // Take the mean of the first difference
     double expect_diff = mean_diff(x);
-    
-    arma::vec theta_star = guess_initial(desc, objdesc, model_type, p, expect_diff, N, wv_empir, scales, 10000);
+
+    double ranged = dr_slope(x);
+  
+    // updated for WV obj pull
+    arma::vec theta_star = guess_initial(desc, objdesc, model_type, p, expect_diff, N, wvar, scales, ranged, 10000);
     
 
     // Obtain the GMWM estimator's estimates. (WV_EMPIR)

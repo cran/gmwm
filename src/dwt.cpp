@@ -24,29 +24,28 @@
 // We use reverse vec
 #include "armadillo_manipulations.h"
 
-using namespace Rcpp;
-
 /* --------------------- Start DWT and MODWT Functions --------------------- */
 
 
 //' @title Discrete Wavelet Transform
 //' @description Calculation of the coefficients for the discrete wavelet transformation. 
-//' @usage dwt_cpp(x, filter_name, nlevels, boundary)
-//' @param x A \code{vector} with dimensions \eqn{N\times 1}{N x 1}. 
+//' @param x           A \code{vector} with dimensions \eqn{N\times 1}{N x 1}. 
 //' @param filter_name A \code{string} indicating the filter.
-//' @param nlevels An \code{integer}, \eqn{J}, indicating the level of the decomposition.
-//' @param boundary A \code{string} indicating the type of boundary method to use. Either \code{boundary="periodic"} or \code{"reflection"}.
+//' @param nlevels     An \code{integer}, \eqn{J}, indicating the level of the decomposition.
+//' @param boundary    A \code{string} indicating the type of boundary method to use. Either \code{boundary="periodic"} or \code{"reflection"}.
+//' @param brickwall   A \code{bool} indicating whether the a brick wall procedure should be applied to the coefficients.
 //' @return y A \code{field<vec>} that contains the wavelet coefficients for each decomposition level
 //' @details
 //' Performs a level J decomposition of the time series using the pyramid algorithm
 //' @author JJB
+//' @keywords internal
 //' @examples
 //' set.seed(999)
 //' x = rnorm(2^8)
-//' dwt_cpp(x, "haar", 4, boundary="periodic")
+//' dwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
 // [[Rcpp::export]]
-arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name = "haar", 
-                                   unsigned int nlevels = 4, std::string boundary = "periodic") {
+arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name, 
+                                   unsigned int nlevels, std::string boundary, bool brickwall) {
                                      
   if(boundary == "periodic"){
     //
@@ -56,7 +55,7 @@ arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name = "haar",
     x.resize(2*temp_N);
     x.rows(temp_N, 2*temp_N-1) = rev_vec;
   }else{
-      stop("The supplied 'boundary' argument is not supported! Choose either periodic or reflection."); 
+      Rcpp::stop("The supplied 'boundary' argument is not supported! Choose either periodic or reflection."); 
   }
 
   unsigned int N = x.n_elem;
@@ -66,10 +65,10 @@ arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name = "haar",
   unsigned int tau = pow(2,J);
     
   if(double(N)/double(tau) != floor(double(N)/double(tau))){
-    stop("The supplied sample size ('x') must be divisible by 2^(nlevels). Either truncate or expand the number of samples.");
+    Rcpp::stop("The supplied sample size ('x') must be divisible by 2^(nlevels). Either truncate or expand the number of samples.");
   }
   if(tau > N){
-    stop("The number of levels [ 2^(nlevels) ] exceeds sample size ('x'). Supply a lower number of levels.");
+    Rcpp::stop("The number of levels [ 2^(nlevels) ] exceeds sample size ('x'). Supply a lower number of levels.");
   }
 
   arma::field<arma::vec> filter_info = select_filter(filter_name);
@@ -112,18 +111,21 @@ arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name = "haar",
     x = Vj;
   }
   
+  
+  // Apply brickwall
+  if(brickwall){
+    y = brick_wall(y, filter_info, "dwt");
+  }
+  
   return y;
 }
 
 
 
 //' @title Maximum Overlap Discrete Wavelet Transform
-//' @description Calculation of the coefficients for the discrete wavelet transformation
-//' @usage modwt_cpp(x, filter_name, nlevels, boundary)
-//' @param x A \code{vector} with dimensions N x 1. 
-//' @param filter_name A \code{string} indicating the filter.
-//' @param nlevels An \code{integer} indicating the level of the decomposition.
-//' @param boundary A \code{string} indicating the type of boundary method to use. Either \code{boundary="periodic"} or \code{"reflection"}.
+//' @description 
+//' Calculation of the coefficients for the discrete wavelet transformation
+//' @inheritParams dwt_cpp
 //' @return y A \code{field<vec>} that contains the wavelet coefficients for each decomposition level
 //' @keywords internal
 //' @details
@@ -131,13 +133,14 @@ arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name = "haar",
 //' Use this implementation to supply custom parameters instead of modwt(x),
 //' which serves as a wrapper function.
 //' @author JJB
+//' @keywords internal
 //' @examples
 //' set.seed(999)
 //' x = rnorm(100)
-//' modwt_cpp(x, "haar", 4, boundary="periodic")
+//' modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
 // [[Rcpp::export]]
-arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name = "haar", 
-                                   unsigned int nlevels = 4, std::string boundary = "periodic"){
+arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name, 
+                                   unsigned int nlevels, std::string boundary, bool brickwall){
   
   if(boundary == "periodic"){
     //
@@ -147,7 +150,7 @@ arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name = "haar",
     x.resize(2*temp_N);
     x.rows(temp_N, 2*temp_N-1) = rev_vec;
   }else{
-      stop("The supplied 'boundary' argument is not supported! Choose either periodic or reflection."); 
+    Rcpp::stop("The supplied 'boundary' argument is not supported! Choose either periodic or reflection."); 
   }
 
   unsigned int N = x.n_elem;
@@ -156,8 +159,7 @@ arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name = "haar",
   
   unsigned int tau = pow(2,J);
   
-  if(tau > N)
-    stop("The number of levels [ 2^(nlevels) ] exceeds sample size ('x'). Supply a lower number of levels.");
+  if(tau > N) Rcpp::stop("The number of levels [ 2^(nlevels) ] exceeds sample size ('x'). Supply a lower number of levels.");
 
   arma::field<arma::vec> filter_info = select_filter(filter_name);
   
@@ -200,15 +202,20 @@ arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name = "haar",
     x = Vj;
   }
   
+  // Apply brickwall
+  if(brickwall){
+   y = brick_wall(y, filter_info, "modwt");
+  }
+  
   return y;
 }
 
 
 //' @title Removal of Boundary Wavelet Coefficients
 //' @description Removes the first n wavelet coefficients.
-//' @param x A \code{field<vec>} that contains the nlevel decomposition using either modwt or dwt.
+//' @param x           A \code{field<vec>} that contains the nlevel decomposition using either modwt or dwt.
 //' @param wave_filter A \code{field<vec>} containing filter information. Only "haar" is implemented.
-//' @param method A \code{string} to describe the mode. Choose between "modwt" and "dwt"
+//' @param method      A \code{string} to describe the mode. Choose between "modwt" and "dwt"
 //' @return A \code{field<vec>} with boundary modwt or dwt taken care of.
 //' @keywords internal
 //' @details 
@@ -216,10 +223,13 @@ arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name = "haar",
 //' These vectors are then stored into the field that is returned.
 //' Note: As a result, there are no NA's introduced and hence the na.omit is not needed.
 //' @examples
-//' x=rnorm(100)
-//' brick_wall(modwt_cpp(x, "haar", 4, boundary="periodic"), select_filter("haar"), "modwt")
+//' x = rnorm(100)
+//' me = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = FALSE)
+//' brick_wall(me, select_filter("haar"), "modwt")
 // [[Rcpp::export]]
-arma::field<arma::vec> brick_wall(arma::field<arma::vec> x,  arma::field<arma::vec> wave_filter, std::string method = "modwt") 
+arma::field<arma::vec> brick_wall(arma::field<arma::vec> x,  
+                                  arma::field<arma::vec> wave_filter, 
+                                  std::string method) 
 {
     int m = as_scalar(wave_filter(0));
 

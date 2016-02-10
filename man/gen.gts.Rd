@@ -4,27 +4,32 @@
 \alias{gen.gts}
 \title{Create a GMWM TS Object based on model}
 \usage{
-gen.gts(model, N = 1000, freq = 1, unit = NULL, name = "")
+gen.gts(model, N = 1000, start = 0, end = NULL, freq = 1, unit = NULL,
+  name = NULL)
 }
 \arguments{
 \item{model}{A \code{ts.model} or \code{gmwm} object containing one of the allowed models.}
 
 \item{N}{An \code{interger} containing the amount of observations for the time series.}
 
+\item{start}{A \code{numeric} that provides the time of the first observation.}
+
+\item{end}{A \code{numeric} that provides the time of the last observation.}
+
 \item{freq}{A \code{numeric} that provides the rate of samples. Default value is 1.}
 
 \item{unit}{A \code{string} that contains the unit expression of the frequency. Default value is \code{NULL}.}
 
-\item{name}{A \code{string} that provides an identifier to the data. Default value is an empty string.}
+\item{name}{A \code{string} that provides an identifier to the data. Default value is \code{NULL}.}
 }
 \value{
-A \code{gts} object with the structure:
-\itemize{
-  \item{x:} {A \code{matirx} that contains x-axis values to plot}
-  \item{data:} {A \code{matrix} that contains data for combined processes}
-  \item{freq:} {Numeric representation of frequency}
-  \item{unit:} {String representation of the unit}
-  \item{name:} {Name of the Dataset}
+A \code{gts} object with the following attributes:
+\describe{
+  \item{start}{The time of the first observation}
+  \item{end}{The time of the last observation}
+  \item{freq}{Numeric representation of frequency}
+  \item{unit}{String representation of the unit}
+  \item{name}{Name of the dataset}
 }
 }
 \description{
@@ -34,9 +39,29 @@ Create a \code{gts} object based on a supplied time series model.
 This function accepts either a \code{ts.model} object (e.g. AR1(phi = .3, sigma2 =1) + WN(sigma2 = 1)) or a \code{gmwm} object.
 }
 \examples{
-# AR
+# Set seed for reproducibility
 set.seed(1336)
-model = AR1(phi = .99, sigma = 1) + WN(sigma2=1)
-gen.gts(model)
+
+n = 1000
+
+# AR1 + WN
+model = AR1(phi = .5, sigma2 = .1) + WN(sigma2=1)
+x = gen.gts(model, n)
+x
+plot(x)
+
+set.seed(1336)
+# GM + WN
+# Convert from AR1 to GM values
+m = ar1_to_gm(c(.5,.1),10)
+# Beta = 6.9314718, Sigma2_gm = 0.1333333
+model = GM(beta = m[1], sigma2_gm = m[2]) + WN(sigma2=1)
+x2 = gen.gts(model, n, freq = 10, unit = 'sec')
+x2
+
+plot(x2, to.unit = 'min')
+
+# Same time series
+all.equal(x, x2, check.attributes = FALSE)
 }
 

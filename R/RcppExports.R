@@ -68,6 +68,7 @@ var_drift <- function(omega, n_ts) {
 #' random.walk = cumsum(0.1*rnorm(N, 0, 2))
 #' combined.ts = white.noise+random.walk
 #' av_mat = avar_to_cpp(combined.ts)
+#' @keywords internal
 avar_to_cpp <- function(x) {
     .Call('gmwm_avar_to_cpp', PACKAGE = 'gmwm', x)
 }
@@ -103,6 +104,7 @@ avar_to_cpp <- function(x) {
 #' random.walk = cumsum(0.1*rnorm(N, 0, 2))
 #' combined.ts = white.noise+random.walk
 #' av_mat = avar_mo_cpp(combined.ts)
+#' @keywords internal
 avar_mo_cpp <- function(x) {
     .Call('gmwm_avar_mo_cpp', PACKAGE = 'gmwm', x)
 }
@@ -285,9 +287,10 @@ Rcpp_ARIMA <- function(data, params) {
 #' 
 #' Sorts a given matrix by a specific column while retain the elements in each row.
 #' 
-#' @param x A \code{matrix} to sort
+#' @param x   A \code{matrix} to sort
 #' @param col A \code{int} that indicates the column the matrix should sort by.
-#' @details The functional difference between armadillo's sort() and sort_mat() is straight forward.
+#' @details 
+#' The functional difference between armadillo's sort() and sort_mat() is straight forward.
 #' sort() will sort each column without respect to the rows. 
 #' Using sort_matrix will sort only 1 column and retain the other elements to be in the same row.
 #' @return The matrix sorted by values in the specified column.
@@ -297,11 +300,11 @@ sort_mat <- function(x, col) {
 }
 
 #' @title Reverse Subset Column
-#' @description Subsets the column by going from high indices to low (the reverse of the supported practice)
-#' @usage rev_col_subset(x, start, end)
-#' @param x A \code{matrix} of dimensions M x N
+#' @description 
+#' Subsets the column by going from high indices to low (the reverse of the supported practice)
+#' @param x     A \code{matrix} of dimensions M x N
 #' @param start A \code{unsigned int} that indicates the starting column.
-#' @param end A \code{unsigned int} that indicates the ending column.
+#' @param end   A \code{unsigned int} that indicates the ending column.
 #' @return x A \code{matrix} with matrix rows displayed in reverse order
 #' @details Consider a vector x=[[1,2],[3,4]].
 #' By setting \code{start=1} and \code{end=0}, the function would output x=[[2,1],[4,1]].
@@ -317,10 +320,9 @@ rev_col_subset <- function(x, start, end) {
 
 #' @title Reverse Subset Row
 #' @description Subsets the row by going from high indices to low (the reverse of the supported practice)
-#' @usage rev_row_subset(x, start, end)
-#' @param x A \code{matrix} of dimensions M x N
-#' @param start A \code{unsigned int} that indicates the starting row.
-#' @param end A \code{unsigned int} that indicates the ending row.
+#' @param x      A \code{matrix} of dimensions M x N
+#' @param start  A \code{unsigned int} that indicates the starting row.
+#' @param end    A \code{unsigned int} that indicates the ending row.
 #' @return x A \code{matrix} with matrix rows displayed in reversed order
 #' @details Consider a vector x=[[1,2],[3,4]], the function would output x=[[3,4],[1,2]].
 #' Start and end must be valid C++ matrix locations. (e.g. matrix rows start at 0 and not 1)
@@ -355,7 +357,6 @@ reverse_vec <- function(x) {
 #' @author JJB
 #' @examples
 #' x=rnorm(100)
-#' field_to_matrix(modwt_cpp(x))
 #' @keywords internal
 field_to_matrix <- function(x) {
     .Call('gmwm_field_to_matrix', PACKAGE = 'gmwm', x)
@@ -368,7 +369,6 @@ field_to_matrix <- function(x) {
 #' @author JJB
 #' @examples
 #' x=rnorm(100)
-#' field_to_matrix(modwt_cpp(x))
 #' @keywords internal
 sum_field_vec <- function(x) {
     .Call('gmwm_sum_field_vec', PACKAGE = 'gmwm', x)
@@ -620,30 +620,28 @@ fast_cov_cpp <- function(ci_hi, ci_lo) {
 
 #' @title Discrete Wavelet Transform
 #' @description Calculation of the coefficients for the discrete wavelet transformation. 
-#' @usage dwt_cpp(x, filter_name, nlevels, boundary)
-#' @param x A \code{vector} with dimensions \eqn{N\times 1}{N x 1}. 
+#' @param x           A \code{vector} with dimensions \eqn{N\times 1}{N x 1}. 
 #' @param filter_name A \code{string} indicating the filter.
-#' @param nlevels An \code{integer}, \eqn{J}, indicating the level of the decomposition.
-#' @param boundary A \code{string} indicating the type of boundary method to use. Either \code{boundary="periodic"} or \code{"reflection"}.
+#' @param nlevels     An \code{integer}, \eqn{J}, indicating the level of the decomposition.
+#' @param boundary    A \code{string} indicating the type of boundary method to use. Either \code{boundary="periodic"} or \code{"reflection"}.
+#' @param brickwall   A \code{bool} indicating whether the a brick wall procedure should be applied to the coefficients.
 #' @return y A \code{field<vec>} that contains the wavelet coefficients for each decomposition level
 #' @details
 #' Performs a level J decomposition of the time series using the pyramid algorithm
 #' @author JJB
+#' @keywords internal
 #' @examples
 #' set.seed(999)
 #' x = rnorm(2^8)
-#' dwt_cpp(x, "haar", 4, boundary="periodic")
-dwt_cpp <- function(x, filter_name = "haar", nlevels = 4L, boundary = "periodic") {
-    .Call('gmwm_dwt_cpp', PACKAGE = 'gmwm', x, filter_name, nlevels, boundary)
+#' dwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+dwt_cpp <- function(x, filter_name, nlevels, boundary, brickwall) {
+    .Call('gmwm_dwt_cpp', PACKAGE = 'gmwm', x, filter_name, nlevels, boundary, brickwall)
 }
 
 #' @title Maximum Overlap Discrete Wavelet Transform
-#' @description Calculation of the coefficients for the discrete wavelet transformation
-#' @usage modwt_cpp(x, filter_name, nlevels, boundary)
-#' @param x A \code{vector} with dimensions N x 1. 
-#' @param filter_name A \code{string} indicating the filter.
-#' @param nlevels An \code{integer} indicating the level of the decomposition.
-#' @param boundary A \code{string} indicating the type of boundary method to use. Either \code{boundary="periodic"} or \code{"reflection"}.
+#' @description 
+#' Calculation of the coefficients for the discrete wavelet transformation
+#' @inheritParams dwt_cpp
 #' @return y A \code{field<vec>} that contains the wavelet coefficients for each decomposition level
 #' @keywords internal
 #' @details
@@ -651,19 +649,20 @@ dwt_cpp <- function(x, filter_name = "haar", nlevels = 4L, boundary = "periodic"
 #' Use this implementation to supply custom parameters instead of modwt(x),
 #' which serves as a wrapper function.
 #' @author JJB
+#' @keywords internal
 #' @examples
 #' set.seed(999)
 #' x = rnorm(100)
-#' modwt_cpp(x, "haar", 4, boundary="periodic")
-modwt_cpp <- function(x, filter_name = "haar", nlevels = 4L, boundary = "periodic") {
-    .Call('gmwm_modwt_cpp', PACKAGE = 'gmwm', x, filter_name, nlevels, boundary)
+#' modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+modwt_cpp <- function(x, filter_name, nlevels, boundary, brickwall) {
+    .Call('gmwm_modwt_cpp', PACKAGE = 'gmwm', x, filter_name, nlevels, boundary, brickwall)
 }
 
 #' @title Removal of Boundary Wavelet Coefficients
 #' @description Removes the first n wavelet coefficients.
-#' @param x A \code{field<vec>} that contains the nlevel decomposition using either modwt or dwt.
+#' @param x           A \code{field<vec>} that contains the nlevel decomposition using either modwt or dwt.
 #' @param wave_filter A \code{field<vec>} containing filter information. Only "haar" is implemented.
-#' @param method A \code{string} to describe the mode. Choose between "modwt" and "dwt"
+#' @param method      A \code{string} to describe the mode. Choose between "modwt" and "dwt"
 #' @return A \code{field<vec>} with boundary modwt or dwt taken care of.
 #' @keywords internal
 #' @details 
@@ -671,9 +670,10 @@ modwt_cpp <- function(x, filter_name = "haar", nlevels = 4L, boundary = "periodi
 #' These vectors are then stored into the field that is returned.
 #' Note: As a result, there are no NA's introduced and hence the na.omit is not needed.
 #' @examples
-#' x=rnorm(100)
-#' brick_wall(modwt_cpp(x, "haar", 4, boundary="periodic"), select_filter("haar"), "modwt")
-brick_wall <- function(x, wave_filter, method = "modwt") {
+#' x = rnorm(100)
+#' me = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = FALSE)
+#' brick_wall(me, select_filter("haar"), "modwt")
+brick_wall <- function(x, wave_filter, method) {
     .Call('gmwm_brick_wall', PACKAGE = 'gmwm', x, wave_filter, method)
 }
 
@@ -882,8 +882,8 @@ gmwm_engine <- function(theta, desc, objdesc, model_type, wv_empir, omega, scale
 #' @keywords internal
 #' @backref src/gmwm_logic.cpp
 #' @backref src/gmwm_logic.h
-gmwm_update_cpp <- function(theta, desc, objdesc, model_type, N, expect_diff, orgV, scales, wv_empir, starting, compute_v, K, H, G, robust, eff) {
-    .Call('gmwm_gmwm_update_cpp', PACKAGE = 'gmwm', theta, desc, objdesc, model_type, N, expect_diff, orgV, scales, wv_empir, starting, compute_v, K, H, G, robust, eff)
+gmwm_update_cpp <- function(theta, desc, objdesc, model_type, N, expect_diff, ranged, orgV, scales, wv, starting, compute_v, K, H, G, robust, eff) {
+    .Call('gmwm_gmwm_update_cpp', PACKAGE = 'gmwm', theta, desc, objdesc, model_type, N, expect_diff, ranged, orgV, scales, wv, starting, compute_v, K, H, G, robust, eff)
 }
 
 #' @title Master Wrapper for the GMWM Estimator
@@ -909,6 +909,26 @@ gmwm_update_cpp <- function(theta, desc, objdesc, model_type, N, expect_diff, or
 #' @backref src/gmwm_logic.h
 gmwm_master_cpp <- function(data, theta, desc, objdesc, model_type, starting, alpha, compute_v, K, H, G, robust, eff) {
     .Call('gmwm_gmwm_master_cpp', PACKAGE = 'gmwm', data, theta, desc, objdesc, model_type, starting, alpha, compute_v, K, H, G, robust, eff)
+}
+
+#' @title Randomly guess a starting parameter
+#' @description Sets starting parameters for each of the given parameters. 
+#' @param desc A \code{vector<string>} that contains the model's components.
+#' @param objdesc A \code{field<vec>} that contains an object description (e.g. values) of the model.
+#' @param model_type A \code{string} that indicates whether it is an SSM or sensor.
+#' @param num_param An \code{unsigned int} number of parameters in the model (e.g. # of thetas).
+#' @param expect_diff A \code{double} that contains the mean of the first difference of the data
+#' @param N A \code{integer} that contains the number of observations in the data.
+#' @param wv_empir A \code{vec} that contains the empirical wavelet variance.
+#' @param tau A \code{vec} that contains the scales. (e.g. 2^(1:J))
+#' @param double A \code{double} that contains the drift slope given by \eqn{\frac{max-min}{N}}{(Max-Min)/N}
+#' @param G A \code{integer} that indicates how many random draws that should be performed.
+#' @return A \code{vec} containing smart parameter starting guesses to be iterated over.
+#' @keywords internal
+#' @examples
+#' #TBA
+guess_initial <- function(desc, objdesc, model_type, num_param, expect_diff, N, wv, tau, ranged, G) {
+    .Call('gmwm_guess_initial', PACKAGE = 'gmwm', desc, objdesc, model_type, num_param, expect_diff, N, wv, tau, ranged, G)
 }
 
 #' @title Randomly guess starting parameters for AR1
@@ -953,8 +973,8 @@ arma_draws <- function(p, q, sigma2_total) {
 #' @keywords internal
 #' @examples
 #' #TBA
-guess_initial <- function(desc, objdesc, model_type, num_param, expect_diff, N, wv_empir, tau, B) {
-    .Call('gmwm_guess_initial', PACKAGE = 'gmwm', desc, objdesc, model_type, num_param, expect_diff, N, wv_empir, tau, B)
+guess_initial_old <- function(desc, objdesc, model_type, num_param, expect_diff, N, wv_empir, tau, B) {
+    .Call('gmwm_guess_initial_old', PACKAGE = 'gmwm', desc, objdesc, model_type, num_param, expect_diff, N, wv_empir, tau, B)
 }
 
 #' @title Indirect Inference for ARMA
@@ -1324,8 +1344,9 @@ decomp_to_theo_wv <- function(decomp) {
     .Call('gmwm_decomp_to_theo_wv', PACKAGE = 'gmwm', decomp)
 }
 
-#' Read an IMU Binary File into R
+#' @title Read an IMU Binary File into R
 #' 
+#' @description
 #' The function will take a file location in addition to the type of sensor it
 #' came from and read the data into R.
 #' 
@@ -1362,6 +1383,7 @@ decomp_to_theo_wv <- function(decomp) {
 #' \dontrun{
 #' read_imu(file_path = "F:/Desktop/short_test_data.imu", imu_type = "IXSEA")
 #' }
+#' @keywords internal
 read_imu <- function(file_path, imu_type) {
     .Call('gmwm_read_imu', PACKAGE = 'gmwm', file_path, imu_type)
 }
@@ -1696,6 +1718,48 @@ order_AR1s <- function(theta, desc, objdesc) {
     .Call('gmwm_order_AR1s', PACKAGE = 'gmwm', theta, desc, objdesc)
 }
 
+#' @title Transform AR1 to GM
+#' @description 
+#' Takes AR1 values and transforms them to GM
+#' @param theta A \code{vec} that contains AR1 values.
+#' @param freq  A \code{double} indicating the frequency of the data.
+#' @return A \code{vec} containing GM values.
+#' @details
+#' The function takes a vector of AR1 values \eqn{\phi}{phi} and \eqn{\sigma ^2}{sigma ^2}
+#' and transforms them to GM values \eqn{\beta}{beta} and \eqn{\sigma ^2_{gm}}{sigma ^2[gm]}
+#' using the formulas:
+#' \eqn{\beta  =  - \frac{{\ln \left( \phi  \right)}}{{\Delta t}}}{beta = -ln(phi)/delta_t}
+#' \eqn{\sigma _{gm}^2 = \frac{{{\sigma ^2}}}{{1 - {\phi ^2}}} }{sigma^2[gm] = sigma^2/(1-phi^2)}
+#' @keywords internal
+#' @author JJB
+#' @backref src/ts_model_cpp.cpp
+#' @backref src/ts_model_cpp.h
+#' @examples
+#' ar1_to_gm(c(0.3,1,0.6,.3), 2)
+ar1_to_gm <- function(theta, freq) {
+    .Call('gmwm_ar1_to_gm', PACKAGE = 'gmwm', theta, freq)
+}
+
+#' @title Transform GM to AR1
+#' @description Takes GM values and transforms them to AR1
+#' @param theta A \code{vec} that contains AR1 values.
+#' @param freq A \code{double} indicating the frequency of the data.
+#' @return A \code{vec} containing GM values.
+#' @keywords internal
+#' @author JJB
+#' The function takes a vector of GM values \eqn{\beta}{beta} and \eqn{\sigma ^2_{gm}}{sigma ^2[gm]}
+#' and transforms them to AR1 values \eqn{\phi}{phi} and \eqn{\sigma ^2}{sigma ^2}
+#' using the formulas:
+#' \eqn{\phi  = \exp \left( { - \beta \Delta t} \right)}{phi = exp(-beta * delta[t])}
+#' \eqn{{\sigma ^2} = \sigma _{gm}^2\left( {1 - \exp \left( { - 2\beta \Delta t} \right)} \right)}{sigma^2 = sigma^2[gm]*(1-exp(-2*beta*delta[t]))}
+#' @backref src/ts_model_cpp.cpp
+#' @backref src/ts_model_cpp.h
+#' @examples
+#' gm_to_ar1(c(0.3,1,0.6,.3), 2)
+gm_to_ar1 <- function(theta, freq) {
+    .Call('gmwm_gm_to_ar1', PACKAGE = 'gmwm', theta, freq)
+}
+
 #' @title Generate the ts model object description
 #' @description Creates the ts.model's obj.desc value
 #' @param desc A \code{vector<string>} that contains a list of the strings of each process.
@@ -1703,7 +1767,7 @@ order_AR1s <- function(theta, desc, objdesc) {
 #' @details
 #' This function currently does NOT support ARMA models. 
 #' That is, there is no support for ARMA, AR, or MA.
-#' There is support for AR1, WN, DR, QN, and RW.
+#' There is support for AR1, GM, WN, DR, QN, and RW.
 #' @keywords internal
 #' @backref src/ts_model_cpp.cpp
 #' @backref src/ts_model_cpp.h
@@ -1718,7 +1782,7 @@ model_objdesc <- function(desc) {
 #' @details
 #' This function currently does NOT support ARMA models. 
 #' That is, there is no support for ARMA, AR, or MA.
-#' There is support for AR1, WN, DR, QN, and RW.
+#' There is support for AR1, GM, WN, DR, QN, and RW.
 #' @keywords internal
 #' @backref src/ts_model_cpp.cpp
 #' @backref src/ts_model_cpp.h
@@ -1733,7 +1797,7 @@ model_theta <- function(desc) {
 #' @details
 #' This function currently does NOT support ARMA models. 
 #' That is, there is no support for ARMA, AR, or MA.
-#' There is support for AR1, WN, DR, QN, and RW.
+#' There is support for AR1, GM, WN, DR, QN, and RW.
 #' @keywords internal
 #' @backref src/ts_model_cpp.cpp
 #' @backref src/ts_model_cpp.h
@@ -1743,8 +1807,8 @@ model_process_desc <- function(desc) {
 
 #' @title Generate eta3 confidence interval
 #' @description Computes the eta3 CI
-#' @param y A \code{vec} that computes the brickwalled modwt dot product of each wavelet coefficient divided by their length.
-#' @param dims A \code{String} indicating the confidence interval being calculated.
+#' @param y          A \code{vec} that computes the brickwalled modwt dot product of each wavelet coefficient divided by their length.
+#' @param dims       A \code{String} indicating the confidence interval being calculated.
 #' @param alpha_ov_2 A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level 
 #' @return A \code{matrix} with the structure:
 #' \itemize{
@@ -1756,20 +1820,19 @@ model_process_desc <- function(desc) {
 #' @examples
 #' x = rnorm(100)
 #' # Uses the internal MODWT function not associated with an S3 class.
-#' decomp = modwt_cpp(x, "haar", 4, "periodic")
-#' signal_modwt_bw = brick_wall(decomp, select_filter("haar"), "modwt")
-#' y = wave_variance(signal_modwt_bw)
-#' ci_wave_variance(signal_modwt_bw, y, type = "eta3", alpha_ov_2 = 0.025)
+#' decomp = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+#' y = wave_variance(decomp)
+#' ci_wave_variance(decomp, y, type = "eta3", alpha_ov_2 = 0.025)
 ci_eta3 <- function(y, dims, alpha_ov_2) {
     .Call('gmwm_ci_eta3', PACKAGE = 'gmwm', y, dims, alpha_ov_2)
 }
 
 #' @title Generate eta3 robust confidence interval
 #' @description Computes the eta3 robust CI
-#' @param wv_robust A \code{vec} that computes the brickwalled modwt dot product of each wavelet coefficient divided by their length.
+#' @param wv_robust   A \code{vec} that computes the brickwalled modwt dot product of each wavelet coefficient divided by their length.
 #' @param wv_ci_class A \code{mat} that contains the CI mean, CI Lower, and CI Upper
-#' @param alpha_ov_2 A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level
-#' @param eff A \code{double} that indicates the efficiency.
+#' @param alpha_ov_2  A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level
+#' @param eff         A \code{double} that indicates the efficiency.
 #' @return A \code{matrix} with the structure:
 #' \itemize{
 #'  \item{Column 1}{Robust Wavelet Variance}
@@ -1782,10 +1845,9 @@ ci_eta3 <- function(y, dims, alpha_ov_2) {
 #' @examples
 #' x = rnorm(100)
 #' # Uses the internal MODWT function not associated with an S3 class.
-#' decomp = modwt_cpp(x, "haar", 4, boundary="periodic")
-#' signal_modwt_bw = brick_wall(decomp, select_filter("haar"), "modwt")
-#' y = wave_variance(signal_modwt_bw, robust = TRUE,  eff = 0.6)
-#' ci_wave_variance(signal_modwt_bw, y, type = "eta3", alpha_ov_2 = 0.025, robust = TRUE, eff = 0.6)
+#' decomp = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+#' y = wave_variance(decomp, robust = TRUE,  eff = 0.6)
+#' ci_wave_variance(decomp, y, type = "eta3", alpha_ov_2 = 0.025, robust = TRUE, eff = 0.6)
 ci_eta3_robust <- function(wv_robust, wv_ci_class, alpha_ov_2, eff) {
     .Call('gmwm_ci_eta3_robust', PACKAGE = 'gmwm', wv_robust, wv_ci_class, alpha_ov_2, eff)
 }
@@ -1793,11 +1855,11 @@ ci_eta3_robust <- function(wv_robust, wv_ci_class, alpha_ov_2, eff) {
 #' @title Generate a Confidence intervval for a Univariate Time Series
 #' @description Computes an estimate of the multiscale variance and a chi-squared confidence interval
 #' @param signal_modwt_bw A \code{field<vec>} that contains the brick walled modwt or dwt decomposition
-#' @param wv A \code{vec} that contains the wave variance.
-#' @param type A \code{String} indicating the confidence interval being calculated.
-#' @param alpha_ov_2 A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level.
-#' @param robust A \code{boolean} to determine the type of wave estimation.
-#' @param eff A \code{double} that indicates the efficiency.
+#' @param wv              A \code{vec} that contains the wave variance.
+#' @param type            A \code{String} indicating the confidence interval being calculated.
+#' @param alpha_ov_2      A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level.
+#' @param robust          A \code{boolean} to determine the type of wave estimation.
+#' @param eff             A \code{double} that indicates the efficiency.
 #' @return A \code{matrix} with the structure:
 #' \itemize{
 #'  \item{Column 1}{Wavelet Variance}
@@ -1811,10 +1873,9 @@ ci_eta3_robust <- function(wv_robust, wv_ci_class, alpha_ov_2, eff) {
 #' set.seed(1337)
 #' x = rnorm(100)
 #' # Uses the internal MODWT function not associated with an S3 class.
-#' decomp = modwt_cpp(x, "haar", 4, boundary="periodic")
-#' signal_modwt_bw = brick_wall(decomp, select_filter("haar"), "modwt")
-#' y = wave_variance(signal_modwt_bw)
-#' ci_wave_variance(signal_modwt_bw, y, type = "eta3", alpha_ov_2 = 0.025)
+#' decomp = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+#' y = wave_variance(decomp)
+#' ci_wave_variance(decomp, y, type = "eta3", alpha_ov_2 = 0.025)
 ci_wave_variance <- function(signal_modwt_bw, wv, type = "eta3", alpha_ov_2 = 0.025, robust = FALSE, eff = 0.6) {
     .Call('gmwm_ci_wave_variance', PACKAGE = 'gmwm', signal_modwt_bw, wv, type, alpha_ov_2, robust, eff)
 }
@@ -1822,29 +1883,54 @@ ci_wave_variance <- function(signal_modwt_bw, wv, type = "eta3", alpha_ov_2 = 0.
 #' @title Generate a Wave Variance for a Univariate Time Series
 #' @description Computes an estimate of the wave variance
 #' @param signal_modwt_bw A \code{field<vec>} that contains the brick walled modwt or dwt decomposition
-#' @param robust A \code{boolean} to determine the type of wave estimation.
-#' @param eff A \code{double} that indicates the efficiency.
+#' @param robust          A \code{boolean} to determine the type of wave estimation.
+#' @param eff             A \code{double} that indicates the efficiency.
 #' @return A \code{vec} that contains the wave variance.
 #' @keywords internal
 #' @examples
 #' set.seed(1337)
 #' x = rnorm(100)
-#' signal_modwt_bw = brick_wall(modwt_cpp(x), haar_filter())
-#' wave_variance(signal_modwt_bw)
+#' decomp = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+#' wave_variance(decomp)
 #' 
-#' wave_variance(signal_modwt_bw, robust = TRUE, eff = 0.6)
+#' wave_variance(decomp, robust = TRUE, eff = 0.6)
 wave_variance <- function(signal_modwt_bw, robust = FALSE, eff = 0.6) {
     .Call('gmwm_wave_variance', PACKAGE = 'gmwm', signal_modwt_bw, robust, eff)
 }
 
 #' @title Computes the (MODWT) wavelet variance
 #' @description Calculates the (MODWT) wavelet variance
-#' @param signal_modwt A \code{field<vec>} that contains the modwt decomposition.
-#' @param robust A \code{boolean} that triggers the use of the robust estimate.
-#' @param eff A \code{double} that indicates the efficiency as it relates to an MLE.
-#' @param alpha A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level 
-#' @param ci_type A \code{String} indicating the confidence interval being calculated. Valid value: "eta3"
-#' @param strWavelet A \code{String} indicating the type of wave filter to be applied. Must be "haar"
+#' @param signal_modwt_bw  A \code{field<vec>} that contains the modwt decomposition after it has been brick walled.
+#' @param robust           A \code{boolean} that triggers the use of the robust estimate.
+#' @param eff              A \code{double} that indicates the efficiency as it relates to an MLE.
+#' @param alpha            A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level 
+#' @param ci_type          A \code{String} indicating the confidence interval being calculated. Valid value: "eta3"
+#' @return A \code{mat} with the structure:
+#' \itemize{
+#'   \item{"variance"}{Wavelet Variance}
+#'   \item{"low"}{Lower CI}
+#'   \item{"high"}{Upper CI}
+#' }
+#' @keywords internal
+#' @details 
+#' This function does the heavy lifting with the signal_modwt_bw
+#' @examples
+#' x = rnorm(100)
+#' decomp = modwt_cpp(x, filter_name = "haar", nlevels = 4, boundary = "periodic", brickwall = TRUE)
+#' wvar_cpp(decomp, robust=FALSE, eff=0.6, alpha = 0.05, ci_type="eta3")
+wvar_cpp <- function(signal_modwt_bw, robust, eff, alpha, ci_type) {
+    .Call('gmwm_wvar_cpp', PACKAGE = 'gmwm', signal_modwt_bw, robust, eff, alpha, ci_type)
+}
+
+#' @title Computes the (MODWT) wavelet variance
+#' @description Calculates the (MODWT) wavelet variance
+#' @param signal     A \code{vec} that contains the data.
+#' @param robust     A \code{boolean} that triggers the use of the robust estimate.
+#' @param eff        A \code{double} that indicates the efficiency as it relates to an MLE.
+#' @param alpha      A \code{double} that indicates the \eqn{\left(1-p\right)\times \alpha}{(1-p)*alpha} confidence level 
+#' @param ci_type    A \code{string} indicating the confidence interval being calculated. Valid value: "eta3"
+#' @param strWavelet A \code{string} indicating the type of wave filter to be applied. Must be "haar"
+#' @param decomp     A \code{string} indicating whether to use "modwt" or "dwt" decomp
 #' @return A \code{mat} with the structure:
 #' \itemize{
 #'   \item{"variance"}{Wavelet Variance}
@@ -1856,15 +1942,42 @@ wave_variance <- function(signal_modwt_bw, robust = FALSE, eff = 0.6) {
 #' This function powers the wvar object. It is also extendable...
 #' @examples
 #' x=rnorm(100)
-#' decomp = modwt(x)
-#' wvar_cpp(decomp$data, robust = FALSE)
-wvar_cpp <- function(signal_modwt, robust = FALSE, eff = 0.6, alpha = 0.05, ci_type = "eta3", strWavelet = "haar") {
-    .Call('gmwm_wvar_cpp', PACKAGE = 'gmwm', signal_modwt, robust, eff, alpha, ci_type, strWavelet)
+#' modwt_wvar_cpp(x, nlevels=4, robust=FALSE, eff=0.6, alpha = 0.05,
+#'                ci_type="eta3", strWavelet="haar", decomp="modwt")
+modwt_wvar_cpp <- function(signal, nlevels, robust, eff, alpha, ci_type, strWavelet, decomp) {
+    .Call('gmwm_modwt_wvar_cpp', PACKAGE = 'gmwm', signal, nlevels, robust, eff, alpha, ci_type, strWavelet, decomp)
+}
+
+#' @title Computes the MO/DWT wavelet variance for multiple processes
+#' @description Calculates the MO/DWT wavelet variance
+#' @param signal     A \code{matrix} that contains the same number of observations per dataset
+#' @param robust     A \code{boolean} that triggers the use of the robust estimate.
+#' @param eff        A \code{double} that indicates the efficiency as it relates to an MLE.
+#' @param alpha      A \code{double} that indicates the \eqn{\left(1-p\right)\times \alpha}{(1-p)*alpha} confidence level 
+#' @param ci_type    A \code{string} indicating the confidence interval being calculated. Valid value: "eta3"
+#' @param strWavelet A \code{string} indicating the type of wave filter to be applied. Must be "haar"
+#' @param decomp     A \code{string} indicating whether to use "modwt" or "dwt" decomp
+#' @return A \code{field<mat>} with the structure:
+#' \itemize{
+#'   \item{"variance"}{Wavelet Variance}
+#'   \item{"low"}{Lower CI}
+#'   \item{"high"}{Upper CI}
+#' }
+#' @keywords internal
+#' @details 
+#' This function processes the decomposition of multiple signals quickly
+#' @examples
+#' x = cbind(rnorm(100),rnorm(100))
+#' batch_modwt_wvar_cpp(x, nlevels=4, robust=FALSE, eff=0.6, 
+#'                      alpha = 0.05, ci_type="eta3", strWavelet="haar", 
+#'                      decomp="modwt")
+batch_modwt_wvar_cpp <- function(signal, nlevels, robust, eff, alpha, ci_type, strWavelet, decomp) {
+    .Call('gmwm_batch_modwt_wvar_cpp', PACKAGE = 'gmwm', signal, nlevels, robust, eff, alpha, ci_type, strWavelet, decomp)
 }
 
 #' @title Computes the MODWT scales
 #' @description Calculates the MODWT scales
-#' @param nb_level A \code{integer} that contains the level of decomposition J.
+#' @param nb_level  A \code{integer} that contains the level of decomposition J.
 #' @return A \code{vec} that contains 2^1, ... , 2^J
 #' @keywords internal
 #' @details 

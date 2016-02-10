@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{A \code{GMWM} object}
 
-\item{...}{other arguments passed to specific methods}
+\item{...}{Other arguments passed to specific methods}
 }
 \value{
 Text output via print

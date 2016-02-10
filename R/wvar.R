@@ -15,55 +15,251 @@
 
 #' @title Wavelet Variance
 #' @description Calculates the (MODWT) wavelet variance
-#' @param x A \code{vector} with dimensions N x 1, or a \code{lts} object, or a \code{gts} object. 
-#' @param robust A \code{boolean} that triggers the use of the robust estimate.
-#' @param eff A \code{double} that indicates the efficiency as it relates to an MLE.
-#' @param alpha A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level 
+#' @param x         A \code{vector} with dimensions N x 1, or a \code{lts} object, or a \code{gts} object, or a \code{imu} object. 
+#' @param decomp    A \code{string} that indicates whether to use the "dwt" or "modwt" decomposition.
+#' @param nlevels   An \code{integer} that indicates the level of decomposition. It must be less than or equal to floor(log2(length(x))).
+#' @param robust    A \code{boolean} that triggers the use of the robust estimate.
+#' @param eff       A \code{double} that indicates the efficiency as it relates to an MLE.
+#' @param alpha     A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level 
+#' @param freq      A \code{numeric} that provides the rate of samples.
+#' @param from.unit A \code{string} indicating the unit which the data is converted from.
+#' @param to.unit   A \code{string} indicating the unit which the data is converted to.
+#' @param ... Further arguments passed to or from other methods.
 #' @return A \code{list} with the structure:
-#' \itemize{
-#'   \item{"variance"}{Wavelet Variance},
+#' \describe{
+#'   \item{"variance"}{Wavelet Variance}
 #'   \item{"ci_low"}{Lower CI}
 #'   \item{"ci_high"}{Upper CI}
 #'   \item{"robust"}{Robust active}
 #'   \item{"eff"}{Efficiency level for Robust}
 #'   \item{"alpha"}{p value used for CI}
+#'   \item{"unit"}{String representation of the unit}
 #' }
+#' @details 
+#' If `nlevels` is not specified, it is set to floor(log2(length(x)))
 #' @author JJB
+#' @rdname wvar
 #' @examples
 #' set.seed(999)
-#' x=rnorm(100)
+#' x = rnorm(100)
 #' # Default
 #' wvar(x)
 #' # Robust
 #' wvar(x, robust = TRUE, eff=0.3)
 #' # 90% confidence interval
 #' wvar(x, alpha = 0.10)
-wvar = function(x, alpha = 0.05, robust = FALSE, eff = 0.6) {
+#' 
+#' # IMU Object
+#' \dontrun{
+#' if(!require("imudata")){
+#'    install_imudata()
+#'    library("imudata")
+#' }
+#' 
+#' data(imu6)
+#' test = imu(imu6, gyros = 1:3, accels = 4:6, freq = 100)
+#' df = wvar.imu(test)
+#' }
+#' @export
+wvar = function(x, ...) {
+  UseMethod("wvar")
+}
+
+#' @rdname wvar
+#' @export
+wvar.lts = function(x, decomp = "modwt", nlevels = NULL, alpha = 0.05, robust = FALSE, eff = 0.6, to.unit = NULL, ...){
+  warning('`lts` object is detected. This function can only operate on the combined process.')
+  freq = attr(x, 'freq')
+  unit = attr(x, 'unit')
+  x = x[,ncol(x)]
+
+  wvar.default(x, decomp, nlevels, alpha, robust, eff, freq = freq, from.unit = unit, to.unit = to.unit)
+}
+
+#' @rdname wvar
+#' @export
+wvar.gts = function(x, decomp="modwt", nlevels = NULL, alpha = 0.05, robust = FALSE, eff = 0.6, to.unit = NULL, ...){
+  freq = attr(x, 'freq')
+  unit = attr(x, 'unit')
+  x = x[,1]
   
-  #check lts
-  if(is(x,'lts')){
-    warning('lts object is detected. This function can only operate on the combined process.')
-    x = x$data[ ,ncol(x$data)]
+  wvar.default(x, decomp, nlevels, alpha, robust, eff, freq = freq, from.unit = unit, to.unit = to.unit)
+}
+
+#' @rdname wvar
+#' @export
+wvar.default = function(x, decomp = "modwt", nlevels = NULL, alpha = 0.05, robust = FALSE, eff = 0.6, freq = 1, from.unit = NULL, to.unit = NULL, ...){
+  if(is.null(x)){
+    stop("`x` must contain a value")
+  }else if((is.data.frame(x) || is.matrix(x))){
+    if(ncol(x) > 1) stop("There must be only one column of data supplied.")
   }
   
-  #check gts
-  if(is(x,'gts')){
-    x = x$data[,1]
+  if(is.null(nlevels)){
+    nlevels = floor(log2(length(x)))
+  }
+
+  # check freq
+  if(!is(freq,"numeric") || length(freq) != 1){ stop("'freq' must be one numeric number.") }
+  if(freq <= 0) { stop("'freq' must be larger than 0.") }
+  
+  # check unit
+  all.units = c('ns', 'ms', 'sec', 'second', 'min', 'minute', 'hour', 'day', 'mon', 'month', 'year')
+  if( (!is.null(from.unit) && !from.unit %in% all.units) || (!is.null(to.unit) && !to.unit %in% all.units) ){
+      stop('The supported units are "ns", "ms", "sec", "min", "hour", "day", "month", "year". ')
   }
   
-  nlevels =  floor(log2(length(x)))
-  decomp = .Call('gmwm_modwt_cpp', PACKAGE = 'gmwm', x, filter_name = "haar", nlevels, boundary="periodic")
+  obj =  .Call('gmwm_modwt_wvar_cpp', PACKAGE = 'gmwm',
+               signal=x, nlevels=nlevels, robust=robust, eff=eff, alpha=alpha, 
+               ci_type="eta3", strWavelet="haar", decomp = decomp)
+
+  scales = .Call('gmwm_scales_cpp', PACKAGE = 'gmwm', nlevels)/freq
   
-  out = .Call('gmwm_wvar_cpp', PACKAGE = 'gmwm', decomp, robust, eff, alpha, "eta3", "haar")
-  scales = .Call('gmwm_scales_cpp', PACKAGE = 'gmwm', nlevels)
-  out = structure(list(variance = out[,1],
-                       ci_low = out[,2], 
-                       ci_high = out[,3], 
+  # NO unit conversion
+  if( is.null(from.unit) && is.null(to.unit)==F ){
+    warning("'from.unit' is NULL. Unit conversion was not done.")
+  }
+  
+  # unit conversion
+  if (!is.null(from.unit)){
+    if (!is.null(to.unit)){
+      convert.obj = unitConversion(scales, from.unit = from.unit, to.unit = to.unit)
+      
+      if (convert.obj$converted) {
+        # YES unit conversion
+        scales = convert.obj$x
+        message(paste0('Unit of object is converted from ', from.unit, ' to ', to.unit), appendLF = T)
+      }
+    }
+  }
+  
+  if(!is.null(from.unit) && !is.null(to.unit)){ 
+    unit = to.unit
+  }else{
+    unit = from.unit}
+  
+  create_wvar(obj, decomp, robust, eff, alpha, scales, unit)
+}
+
+#' @rdname wvar
+#' @export
+wvar.imu = function(x, decomp = "modwt", nlevels = NULL, alpha = 0.05, robust = F, eff = 0.6, to.unit = NULL, ...){
+
+  if(!is.imu(x)){
+    stop("`wvar.imu()` requires an IMU Object")
+  }
+  
+  mlevels = floor(log2(nrow(x)))
+  
+  if(is.null(nlevels)){
+    nlevels = mlevels
+  }
+  if(nlevels > mlevels){
+    stop("`nlevels` must be less than ", mlevels,", which is the max number of levels.")
+  }
+  
+  # freq conversion
+  x.freq = attr(x, 'freq')
+  scales = .Call('gmwm_scales_cpp', PACKAGE = 'gmwm', nlevels)/x.freq
+  
+  # NO unit conversion
+  from.unit = attr(x, 'unit')
+  if( is.null(from.unit) && is.null(to.unit)==F ){
+    warning("The unit of the object is NULL. Unit conversion was not done.")
+  }
+  
+  # unit conversion
+  if (!is.null(from.unit)){
+    if (!is.null(to.unit)){
+      # start_end = c(start, end)
+      obj = unitConversion(scales, from.unit = from.unit, to.unit = to.unit)
+      
+      if (obj$converted) {
+        # YES unit conversion
+        scales = obj$x
+        
+        message(paste0('Unit of object is converted from ', from.unit, ' to ', to.unit), appendLF = T)
+      }
+    }
+  }
+  
+  obj.list = .Call('gmwm_batch_modwt_wvar_cpp', PACKAGE = 'gmwm', 
+                   x, nlevels, robust, eff, alpha, ci_type="eta3", strWavelet="haar", decomp)
+
+  total.len = nlevels*ncol(x)
+  
+  # Initialize empty data frame with right number of rows
+  obj = data.frame(WV = numeric(total.len),
+                   scales = numeric(total.len),
+                   low = numeric(total.len),
+                   high = numeric(total.len),
+                   axis = character(total.len),
+                   sensor = character(total.len), stringsAsFactors=FALSE)
+  
+  # Axis length
+  x.axis = attr(x, 'axis')
+  naxis = length(x.axis)
+  
+  # The correct unit
+  if(!is.null(from.unit) && !is.null(to.unit)){ 
+    unit = to.unit
+  }else{
+    unit = from.unit}
+  
+  # Put data into data frame
+  t = 1
+  for (i in 1:ncol(x)){
+    # Cast for Analytical IMU Results
+    obj.list[[i]] = create_wvar(obj.list[[i]], decomp, robust, eff, alpha, scales, unit)
+
+    # Cast for Graphing IMU Results
+    x.num.sensor = attr(x, 'num.sensor')
+    obj[t:(t+nlevels-1),] = data.frame(WV = obj.list[[i]]$variance,
+                                       scales = scales,
+                                       low = obj.list[[i]]$ci_low,
+                                       high = obj.list[[i]]$ci_high,
+                                       axis = x.axis[(i-1)%%naxis+1], 
+                                       sensor = if(i <= x.num.sensor[1]){"Gyroscope"}else{"Accelerometer"},
+                                       stringsAsFactors=FALSE)
+    t = t + nlevels
+  }
+  
+  out = structure(list(dataobj=obj.list, plotobj=obj, unit = unit), class="wvar.imu")
+  
+  out
+}
+
+
+#' @title Create a Wvar object
+#' @description Structures elements into a WVar object
+#' @param obj    A \code{matrix} with dimensions N x 3, that contains the wavelet variance, low ci, hi ci.
+#' @param decomp A \code{string} that indicates whether to use the "dwt" or "modwt" decomposition
+#' @param robust A \code{boolean} that triggers the use of the robust estimate.
+#' @param eff    A \code{double} that indicates the efficiency as it relates to an MLE.
+#' @param alpha  A \code{double} that indicates the \eqn{\left(1-p\right)*\alpha}{(1-p)*alpha} confidence level 
+#' @param scales A \code{vec} that contains the amount of decomposition done at each level.
+#' @param unit   A \code{string} that contains the unit expression of the frequency.
+#' @return A \code{list} with the structure:
+#' \describe{
+#'   \item{"variance"}{Wavelet Variance}
+#'   \item{"ci_low"}{Lower CI}
+#'   \item{"ci_high"}{Upper CI}
+#'   \item{"robust"}{Robust active}
+#'   \item{"eff"}{Efficiency level for Robust}
+#'   \item{"alpha"}{p value used for CI}
+#'   \item{"unit"}{String representation of the unit}
+#' }
+#' @keywords internal
+create_wvar = function(obj, decomp, robust, eff, alpha, scales, unit){
+  structure(list(variance = obj[,1],
+                       ci_low = obj[,2], 
+                       ci_high = obj[,3], 
                        robust = robust, 
                        eff = eff,
                        alpha = alpha,
-                       scales = scales), class = "wvar")
-  invisible(out)
+                       scales = scales,
+                       decomp = decomp,
+                       unit = unit), class = "wvar")
 }
 
 #' @title Print Wavelet Variances
@@ -180,6 +376,7 @@ autoplot.wvar = function(object, transparence = 0.1, background = 'white', bw = 
                          legend.title = '',  legend.label =  NULL,
                          legend.key.size = 1, legend.title.size = 13, 
                          legend.text.size = 13, ...){
+  
   .x=low=high=trans_breaks=trans_format=math_format=value=variable=NULL
   
   if( !(background %in% c('grey','gray', 'white')) ){
@@ -244,7 +441,7 @@ autoplot.wvar = function(object, transparence = 0.1, background = 'white', bw = 
                   labels = trans_format("log10", math_format(10^.x)))
   
   #if(CI){
-  p = p + geom_ribbon(data = WV, mapping = aes(ymin = low , ymax = high, x = scale, y = NULL), alpha = transparence, fill = CI.color, show_guide = T) +
+  p = p + geom_ribbon(data = WV, mapping = aes(ymin = low , ymax = high, x = scale, y = NULL), alpha = transparence, fill = CI.color, show.legend = T) +
     guides(colour = guide_legend(override.aes = list(fill = legend.color, linetype = legend.linetype, shape = legend.pointshape)))
   #}
   if( background == 'white'||bw){
@@ -405,7 +602,7 @@ autoplot.wvarComp = function(object, split = TRUE, CI = TRUE, background = 'whit
 #' @author JJB, Wenchao
 #' @note 
 #' Common error "Error in grid.Call(L_textBounds, as.graphicsAnnot(x$label), x$x, x$y,  : polygon edge not found"
-#' Just run your codes again.
+#' Just run your code again or open R using the R GUI instead of RStudio.
 #' @examples
 #' \dontrun{
 #' #1. Compare two objects
@@ -465,7 +662,7 @@ compare.wvar = function(..., background = 'white', split = TRUE, CI = TRUE, auto
   obj_list = list(...)
   numObj = length(obj_list)
   
-  #check parameter
+  # check parameter
   params = c('line.type', 'line.color', 'CI.color', 'point.size', 'point.shape', 'legend.label')
   requireLength = c(2, numObj, numObj, numObj, numObj, numObj)
   default = list(c('solid','dotted'), NULL,  NULL, rep(5, numObj), rep(20, numObj), NULL)
@@ -490,36 +687,6 @@ compare.wvar = function(..., background = 'white', split = TRUE, CI = TRUE, auto
     plot(...)
   }
   else  {
-    
-    #     #check whether all robust or all classical
-    #     allRobust = T
-    #     allClassical = T
-    #     for(i in 1:numObj){
-    #       allRobust = allRobust&&obj_list[[i]]$robust
-    #       allClassical = allClassical&&(!obj_list[[i]]$robust)
-    #     }
-    #     
-    #     #if legend.label is not specified: do something
-    #     #else: do nothing, just use what user specifies
-    #     if(is.null(legend.label)){
-    #       legend.label = c()
-    #       if(allRobust||allClassical){
-    #         for (i in 1:numObj){
-    #           legend.label[i] = paste('Dataset',i)
-    #         }
-    #       }
-    #       else{
-    #         for (i in 1:numObj){
-    #           legend.label[i] = paste('Dataset',i, if(obj_list[[i]]$robust) '(Robust)' else '(Classical)')
-    #         }
-    #       }
-    #     }
-    #     
-    #     if(auto.label.wvar && (allClassical || allRobust)){
-    #       for (i in 1:numObj){
-    #         legend.label[i] = paste(legend.label[i], if(obj_list[[i]]$robust) '(Robust)' else '(Classical)')
-    #       }
-    #     }
     
     if(is.null(legend.label)){
       legend.label = c()
@@ -603,98 +770,3 @@ compare.wvar = function(..., background = 'white', split = TRUE, CI = TRUE, auto
   }
   
 }
-
-
-# @title Compare Wavelet Variances Together
-# @description Creates the wavelet variance graphs with classic and robust together
-# @method autoplot wvarcomp
-# @param object A \code{data.frame} containing both sets of variances.
-# @param ... other arguments passed to specific methods
-# @return A ggplot2 graph containing both the wavelet variances.
-# @author JJB
-# @examples
-# set.seed(999)
-# x=rnorm(100)
-# Classic = wvar(modwt(x))
-# Robust = wvar(modwt(x), robust=TRUE)
-# compare.wvar(Classic = Classic, Robust = Robust, split = FALSE)
-# autoplot.wvarcomp = function(object, ...){
-#   
-#   scales=low1=high1=WV1=low2=high2=WV2=emp=theo=trans_breaks=trans_format=math_format=.x=NULL
-#   
-#   WV = data.frame(WV1 = object$WV1, low1 = object$low1, high1 = object$high1, 
-#                   WV2 = object$WV2, low2 = object$low2, high2 = object$high2, scales = object$scales)
-#   
-#   cols = c("LINE1"="#003C7D","LINE2"="#F47F24")
-#   cols2 = c("LINE2"="#003C7D","LINE1"="#F47F24")
-#   
-#   CI = ggplot(WV, aes( x = scales, y = low1)) + 
-#     geom_line(aes(colour = "LINE1"), linetype = "dotted") +
-#     geom_line(aes(y = high1, colour = "LINE1"),linetype = "dotted") +
-#     geom_line(aes(y = WV1, colour = "LINE1")) + geom_point(aes(y = WV1, colour = "LINE1"), size = 3) +
-#     geom_line(aes(y = low2, colour = "LINE2"),linetype = "dotted") +
-#     geom_line(aes(y = high2, colour = "LINE2"),linetype = "dotted") +
-#     geom_line(aes(y = WV2, colour = "LINE2")) + geom_point(aes(y = WV2, colour = "LINE2"), size = 4, shape = 1) +
-#     xlab( expression(paste("Scale ", tau))) + ylab( expression(paste("Wavelet variance ", nu))) +
-#     scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                   labels = trans_format("log10", math_format(10^.x))) + 
-#     scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                   labels = trans_format("log10", math_format(10^.x))) +
-#     geom_polygon(aes(y = c(low1,rev(high1)), x = c(scales,rev(scales))), fill = "#F47F24", alpha = 0.1) +
-#     geom_polygon(aes(y = c(low2,rev(high2)), x = c(scales,rev(scales))), fill = "#003C7D", alpha = 0.1) +
-#     ggtitle("Haar Wavelet Variance Representation") +
-#     theme(legend.key = element_rect(fill=NA), legend.background = element_rect(fill="gray90", size=.5, linetype="dotted"), 
-#           legend.justification=c(0,0), legend.position=c(0,0.72)) + scale_fill_discrete(name=" ",labels=c(" 95% CI Classical WV  ", " 95% CI Robust WV  ")) +
-#     scale_colour_manual(name=" ", labels=c("Classical WV Estimator","Robust WV Estimator"), 
-#                         values = cols2, guide = guide_legend( fill = c("#F47F24","#003C7D") , colour = c("#F47F24","#003C7D"), override.aes = list(shape = c(16,1))))
-#   
-#   
-#   CI
-# }
-
-# @title Compare Wavelet Variances on Split
-# @description Creates the wavelet variance graphs with classic and robust 
-# on separate graphs with the same panel
-# @method autoplot wvarcompSplit
-# @param object A \code{data.frame} containing both sets of variances.
-# @param ... other arguments passed to specific methods
-# @return A ggplot2 panel containing two graphs of the wavelet variance.
-# @author JJB
-# @examples
-# set.seed(999)
-# x=rnorm(100)
-# Classic = wvar(modwt(x))
-# Robust = wvar(modwt(x), robust=TRUE)
-# compare.wvar(Classic = Classic, Robust = Robust, split = TRUE)
-# autoplot.wvarcompSplit = function(object, ...){
-#   low=high=trans_breaks=trans_format=math_format=.x=NULL
-#   
-#   minval = min(c(object$low1,object$low2))
-#   maxval = max(c(object$high1,object$high2))
-#   
-#   WV = data.frame(var = object$WV1, low = object$low1, high = object$high1, scale = object$scales)
-#   CI1 = ggplot(WV, aes( x = scale, y = low)) + geom_line(linetype = "dotted", colour = "#F47F24") + 
-#     geom_line(aes(y = high),linetype = "dotted", colour = "#F47F24") +
-#     geom_line(aes(y = var), colour = "#F47F24") + geom_point(aes(y = var), size = 3, colour = "#F47F24") +
-#     xlab( expression(paste("Scale ", tau))) + ylab( expression(paste("Wavelet variance ", nu))) +
-#     scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                   labels = trans_format("log10", math_format(10^.x)), limits = c(minval,maxval)) + 
-#     scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                   labels = trans_format("log10", math_format(10^.x))) +
-#     geom_polygon(aes(y = c(low,rev(high)), x = c(scale,rev(scale))), fill = "#F47F24", alpha = 0.1) +
-#     ggtitle("Classical WV") 
-#   
-#   WV = data.frame(var = object$WV2, low = object$low2, high = object$high2, scale = object$scales)
-#   CI2 = ggplot(WV, aes( x = scale, y = low), colour = "#003C7D") + geom_line(linetype = "dotted", colour = "#003C7D") + 
-#     geom_line(aes(y = high),linetype = "dotted", colour = "#003C7D") +
-#     geom_line(aes(y = var)) + geom_point(aes(y = var), size = 3, colour = "#003C7D") +
-#     xlab( expression(paste("Scale ", tau))) + ylab( expression(paste("Wavelet variance ", nu))) +
-#     scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                   labels = trans_format("log10", math_format(10^.x)), limits = c(minval,maxval)) + 
-#     scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
-#                   labels = trans_format("log10", math_format(10^.x))) +
-#     geom_polygon(aes(y = c(low,rev(high)), x = c(scale,rev(scale))), fill = "#003C7D", alpha = 0.1) +
-#     ggtitle("Robust WV")
-#   
-#   multiplot(CI1, CI2, cols=2)
-# }

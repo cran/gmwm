@@ -1,0 +1,120 @@
+---
+title: "Quick Start Guide for the GMWM R Package"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick Start Guide for the GMWM R Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, echo=FALSE}
+  library("knitr")
+  opts_chunk$set(fig.width = 7, fig.height = 4)
+```
+
+# Intro
+
+This document illustrates the features of the GMWM package which have been developed to date. The current version is still preliminary and has not been tested extensively. 
+
+
+# Installation
+
+To start, the GMWM package needs to be installed. There are two options to install the `gmwm` package: CRAN (stable) or GitHub (Development)
+
+
+## Stable
+
+The installation process with CRAN is the simplest and recommended as the version released is considered to be stable:
+
+```{r inst_cran, eval = F}
+install.packages("gmwm")
+```
+
+## Development
+
+For those who wish to be as up-to-date as possible with their `gmwm` install, we also offer the ability to obtain the development version of the package. Since it is a development version, you will need to ensure that your system has a compiler that is compatible with R. 
+
+For help on obtaining a compiler consult:
+
+* [OS X](http://thecoatlessprofessor.com/programming/r-compiler-tools-for-rcpp-on-os-x/)
+
+**Note CRAN provides binary files of the package so there is no need to compile the stable version of the package.**
+
+Once you have compiler installed, then continue on by installing the package dependencies and finally the package itself by doing the following: 
+
+```{r inst_github, eval = F}
+# Install dependencies
+install.packages(c("RcppArmadillo","ggplot2","reshape2","devtools"))
+
+# Install the package from github
+devtools::install_github("SMAC-Group/gmwm")
+```
+
+# Using the `gmwm` package
+
+## Loading
+
+Once the package has been installed, it can be loaded into R by:
+
+```{r library_include, message=FALSE}
+library(gmwm)
+```
+
+Note, that this will automatically load the package `ggplot2` as well.
+
+## Simulate processes
+
+We can now start using the GMWM package and we will simulate a latent model composed of a White Noise (WN) and an Autoregressive model of order 1 (or AR(1) which is a reparametrization of a Gauss-Markov process). To do so, we do the following:
+
+```{r gen_process}
+# Set seed for reproducibility
+set.seed(1)
+
+# Length of the time series
+n = 100000
+
+# Simulate AR(1) + WN
+xt = gen.gts(AR1(phi=.99, sigma2 = 0.01) + WN(sigma2=1),n)
+```
+
+## Compute Wavelet Variance
+
+We now compute the Wavelet Variance (WV) of the simulated process and plot it using the following commands:
+
+```{r wv}
+wv = wvar(xt)
+plot(wv)
+```
+
+
+## Model Process
+
+Based on the plot, we could assume that the model is in fact an AR(1) + WN process for which we would like to estimate its parameters. We therefore specify the model we would like to estimate
+
+```{r modelTS}
+TS.mod = AR1() + WN()
+```
+
+and subsequently use it in the GMWM estimating function as follows
+
+```{r GMWM}
+model = gmwm.imu(TS.mod, data = xt)
+```
+
+The difference between the true and estimated parameters is given below:
+
+```{r results, echo = F}
+results = matrix(c(round(model$estimate,4), c(0.99,0.01,1)), 3, 2)
+rownames(results) = rownames(model$estimate)
+colnames(results) = c("Estim.","True")
+results
+```
+
+## Graphing
+
+It is also possible, as a visual measure of "goodness of fit" of the estimated model, to see the difference between the estimated WV and the one implied by the estimated parameters. To do so we simply do the following
+
+```{r GMWMplot}
+plot(model)
+```

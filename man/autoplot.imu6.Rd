@@ -2,7 +2,7 @@
 % Please edit documentation in R/imu.R
 \name{autoplot.imu6}
 \alias{autoplot.imu6}
-\title{Plot imu object in split type: 6 graphs}
+\title{Plot the Wavelet Variances of IMU Object in Split Type}
 \usage{
 \method{autoplot}{imu6}(object, CI = TRUE, background = "white",
   transparence = 0.1, line.color = NULL, line.type = NULL,

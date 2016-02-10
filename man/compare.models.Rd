@@ -9,6 +9,7 @@ compare.models(..., display.model = T, background = "white",
   line.type = NULL, point.size = NULL, point.shape = NULL,
   title = "Comparison of GMWM Models", title.size = 18,
   axis.label.size = 16, axis.tick.size = 11, facet.label.size = 13,
+  facet.label.background = "#003C7D33",
   axis.x.label = expression(paste("Scale ", tau)),
   axis.y.label = expression(paste("Wavelet Variance ", nu)))
 }
@@ -41,6 +42,8 @@ compare.models(..., display.model = T, background = "white",
 
 \item{facet.label.size}{An \code{integer} that indicates the size of facet label.}
 
+\item{facet.label.background}{A \code{string} that indicates the background color of the facet label.}
+
 \item{axis.x.label}{A \code{string} that indicates the label on x axis.}
 
 \item{axis.y.label}{A \code{string} that indicates the label on y axis.}
@@ -54,8 +57,8 @@ all \code{gmwm} objects must be constructed by classical method, or by robust me
 with the same efficiency. That's because this function assumes each \code{gmwm} object has the same empirical wavelet variance (WV).
 This function will check whether this requirement is satisfied before plotting the graph.
 
-\code{line.type}, \code{line.color}, \code{point.size}, \code{point.size} must be a \code{vector}. You need to follow this order:
-"WV, bounds of CI, model1 implied WV, model2 implied WV, ...."
+The value of \code{line.type}, \code{line.color}, \code{point.size}, \code{point.size} must be a \code{vector}. Please follow this order:
+"Empirical WV, lower bound of CI, higher bound of CI, model1 implied WV, model2 implied WV, ...."
 
 Please check examples for help.
 
@@ -64,13 +67,19 @@ plot the graph. Adjust the plot window.
 }
 \examples{
 \dontrun{
-library(GMWM)
-data(imu)
-model1 = gmwm.sensor(3*AR1(),imu[,2])
-model2 = gmwm.sensor(2*AR1() + RW(),imu[,2])
+if(!require("imudata")){
+   install_imudata()
+   library("imudata")
+}
+
+data(imu6)
+
+model1 = gmwm.imu(3*AR1(),imu6[,2])
+model2 = gmwm.imu(2*AR1() + RW(),imu6[,2])
 compare.models(model1, model2)
-compare.models(model1, model2, display.model = F, point.size = c(4, 0, 4, 4))
-compare.models(model1, model2, transparence = 0.2, line.color = c('black', 'grey', 'blue', 'red'))
+compare.models(model1, model2, display.model = F, point.size = c(4, 0, 0, 4, 4))
+compare.models(model1, model2, transparence = 0.2, 
+               line.color = c('black', 'grey', 'grey', 'blue', 'red'))
 }
 }
 \author{

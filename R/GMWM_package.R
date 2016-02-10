@@ -21,8 +21,8 @@
 #' \tabular{ll}{
 #' Package: \tab GMWM\cr
 #' Type: \tab Package\cr
-#' Version: \tab 1.0.0\cr
-#' Date: \tab 2015-11-06\cr
+#' Version: \tab 1.0.1\cr
+#' Date: \tab 2015-12-28\cr
 #' License: \tab CC BY-NC-SA 4.0\cr
 #' }
 #' 
@@ -42,17 +42,6 @@
 #' 
 #' Furthermore, we are also greatful to Dr. Jan Skaloud and Philipp Clausen of Geodetic Engineering Laboratory (TOPO), Swiss Federal Institute of Technology Lausanne (EPFL), topo.epfl.ch, Tel:+41(0)21 693 27 55 for providing data, which motivated the research and development of this package. 
 #' 
-#' @section Licensing:
-#' 
-#' The package is licensed under under the Creative Common Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA) 
-#' 
-#' The software is copyrighted 2015 with the copyright holders being:
-#' \itemize{
-#'  \item James Balamuta
-#'  \item Stephane Guerrier
-#'  \item Roberto Molinari
-#' }
-#' 
 #' @author
 #' James Balamuta \email{balamut2@@illinois.edu},
 #' Stephane Guerrier \email{stephane@@illinois.edu},
@@ -64,12 +53,13 @@
 #' @docType package
 #' @useDynLib gmwm
 #' @importFrom Rcpp evalCpp
-#' @importFrom devtools install_github
 #' @importFrom grDevices gray.colors hcl
 #' @importFrom graphics lines plot
 #' @importFrom methods is
-#' @importFrom stats arima predict
-#' @importFrom utils install.packages installed.packages tail
-#' @import ggplot2 grid scales reshape2 gridExtra
+#' @importFrom stats arima predict ts as.ts
+#' @importFrom utils install.packages tail head packageDescription compareVersion
+#' @importFrom scales trans_breaks trans_format math_format
+#' @importFrom grid textGrob gpar
+#' @import ggplot2 reshape2
 #' @exportPattern ^[[:alpha:]]+
 NULL

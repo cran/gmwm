@@ -546,8 +546,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dwt_cpp
-arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name, unsigned int nlevels, std::string boundary);
-RcppExport SEXP gmwm_dwt_cpp(SEXP xSEXP, SEXP filter_nameSEXP, SEXP nlevelsSEXP, SEXP boundarySEXP) {
+arma::field<arma::vec> dwt_cpp(arma::vec x, std::string filter_name, unsigned int nlevels, std::string boundary, bool brickwall);
+RcppExport SEXP gmwm_dwt_cpp(SEXP xSEXP, SEXP filter_nameSEXP, SEXP nlevelsSEXP, SEXP boundarySEXP, SEXP brickwallSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -555,13 +555,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type filter_name(filter_nameSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nlevels(nlevelsSEXP);
     Rcpp::traits::input_parameter< std::string >::type boundary(boundarySEXP);
-    __result = Rcpp::wrap(dwt_cpp(x, filter_name, nlevels, boundary));
+    Rcpp::traits::input_parameter< bool >::type brickwall(brickwallSEXP);
+    __result = Rcpp::wrap(dwt_cpp(x, filter_name, nlevels, boundary, brickwall));
     return __result;
 END_RCPP
 }
 // modwt_cpp
-arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name, unsigned int nlevels, std::string boundary);
-RcppExport SEXP gmwm_modwt_cpp(SEXP xSEXP, SEXP filter_nameSEXP, SEXP nlevelsSEXP, SEXP boundarySEXP) {
+arma::field<arma::vec> modwt_cpp(arma::vec x, std::string filter_name, unsigned int nlevels, std::string boundary, bool brickwall);
+RcppExport SEXP gmwm_modwt_cpp(SEXP xSEXP, SEXP filter_nameSEXP, SEXP nlevelsSEXP, SEXP boundarySEXP, SEXP brickwallSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -569,7 +570,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type filter_name(filter_nameSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type nlevels(nlevelsSEXP);
     Rcpp::traits::input_parameter< std::string >::type boundary(boundarySEXP);
-    __result = Rcpp::wrap(modwt_cpp(x, filter_name, nlevels, boundary));
+    Rcpp::traits::input_parameter< bool >::type brickwall(brickwallSEXP);
+    __result = Rcpp::wrap(modwt_cpp(x, filter_name, nlevels, boundary, brickwall));
     return __result;
 END_RCPP
 }
@@ -720,8 +722,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // gmwm_update_cpp
-arma::field<arma::mat> gmwm_update_cpp(arma::vec theta, const std::vector<std::string>& desc, const arma::field<arma::vec>& objdesc, std::string model_type, unsigned int N, double expect_diff, arma::mat orgV, arma::vec scales, arma::vec wv_empir, bool starting, std::string compute_v, unsigned int K, unsigned int H, unsigned int G, bool robust, double eff);
-RcppExport SEXP gmwm_gmwm_update_cpp(SEXP thetaSEXP, SEXP descSEXP, SEXP objdescSEXP, SEXP model_typeSEXP, SEXP NSEXP, SEXP expect_diffSEXP, SEXP orgVSEXP, SEXP scalesSEXP, SEXP wv_empirSEXP, SEXP startingSEXP, SEXP compute_vSEXP, SEXP KSEXP, SEXP HSEXP, SEXP GSEXP, SEXP robustSEXP, SEXP effSEXP) {
+arma::field<arma::mat> gmwm_update_cpp(arma::vec theta, const std::vector<std::string>& desc, const arma::field<arma::vec>& objdesc, std::string model_type, unsigned int N, double expect_diff, double ranged, const arma::mat& orgV, const arma::vec& scales, const arma::mat& wv, bool starting, std::string compute_v, unsigned int K, unsigned int H, unsigned int G, bool robust, double eff);
+RcppExport SEXP gmwm_gmwm_update_cpp(SEXP thetaSEXP, SEXP descSEXP, SEXP objdescSEXP, SEXP model_typeSEXP, SEXP NSEXP, SEXP expect_diffSEXP, SEXP rangedSEXP, SEXP orgVSEXP, SEXP scalesSEXP, SEXP wvSEXP, SEXP startingSEXP, SEXP compute_vSEXP, SEXP KSEXP, SEXP HSEXP, SEXP GSEXP, SEXP robustSEXP, SEXP effSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -731,9 +733,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type model_type(model_typeSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type N(NSEXP);
     Rcpp::traits::input_parameter< double >::type expect_diff(expect_diffSEXP);
-    Rcpp::traits::input_parameter< arma::mat >::type orgV(orgVSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type scales(scalesSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type wv_empir(wv_empirSEXP);
+    Rcpp::traits::input_parameter< double >::type ranged(rangedSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type orgV(orgVSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type scales(scalesSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type wv(wvSEXP);
     Rcpp::traits::input_parameter< bool >::type starting(startingSEXP);
     Rcpp::traits::input_parameter< std::string >::type compute_v(compute_vSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type K(KSEXP);
@@ -741,7 +744,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< unsigned int >::type G(GSEXP);
     Rcpp::traits::input_parameter< bool >::type robust(robustSEXP);
     Rcpp::traits::input_parameter< double >::type eff(effSEXP);
-    __result = Rcpp::wrap(gmwm_update_cpp(theta, desc, objdesc, model_type, N, expect_diff, orgV, scales, wv_empir, starting, compute_v, K, H, G, robust, eff));
+    __result = Rcpp::wrap(gmwm_update_cpp(theta, desc, objdesc, model_type, N, expect_diff, ranged, orgV, scales, wv, starting, compute_v, K, H, G, robust, eff));
     return __result;
 END_RCPP
 }
@@ -765,6 +768,26 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type robust(robustSEXP);
     Rcpp::traits::input_parameter< double >::type eff(effSEXP);
     __result = Rcpp::wrap(gmwm_master_cpp(data, theta, desc, objdesc, model_type, starting, alpha, compute_v, K, H, G, robust, eff));
+    return __result;
+END_RCPP
+}
+// guess_initial
+arma::vec guess_initial(const std::vector<std::string>& desc, const arma::field<arma::vec>& objdesc, std::string model_type, unsigned int num_param, double expect_diff, unsigned int N, const arma::mat& wv, const arma::vec& tau, double ranged, unsigned int G);
+RcppExport SEXP gmwm_guess_initial(SEXP descSEXP, SEXP objdescSEXP, SEXP model_typeSEXP, SEXP num_paramSEXP, SEXP expect_diffSEXP, SEXP NSEXP, SEXP wvSEXP, SEXP tauSEXP, SEXP rangedSEXP, SEXP GSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const std::vector<std::string>& >::type desc(descSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type objdesc(objdescSEXP);
+    Rcpp::traits::input_parameter< std::string >::type model_type(model_typeSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type num_param(num_paramSEXP);
+    Rcpp::traits::input_parameter< double >::type expect_diff(expect_diffSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type wv(wvSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< double >::type ranged(rangedSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type G(GSEXP);
+    __result = Rcpp::wrap(guess_initial(desc, objdesc, model_type, num_param, expect_diff, N, wv, tau, ranged, G));
     return __result;
 END_RCPP
 }
@@ -795,9 +818,9 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// guess_initial
-arma::vec guess_initial(const std::vector<std::string>& desc, const arma::field<arma::vec>& objdesc, std::string model_type, unsigned int num_param, double expect_diff, unsigned int N, const arma::vec& wv_empir, const arma::vec& tau, unsigned int B);
-RcppExport SEXP gmwm_guess_initial(SEXP descSEXP, SEXP objdescSEXP, SEXP model_typeSEXP, SEXP num_paramSEXP, SEXP expect_diffSEXP, SEXP NSEXP, SEXP wv_empirSEXP, SEXP tauSEXP, SEXP BSEXP) {
+// guess_initial_old
+arma::vec guess_initial_old(const std::vector<std::string>& desc, const arma::field<arma::vec>& objdesc, std::string model_type, unsigned int num_param, double expect_diff, unsigned int N, const arma::vec& wv_empir, const arma::vec& tau, unsigned int B);
+RcppExport SEXP gmwm_guess_initial_old(SEXP descSEXP, SEXP objdescSEXP, SEXP model_typeSEXP, SEXP num_paramSEXP, SEXP expect_diffSEXP, SEXP NSEXP, SEXP wv_empirSEXP, SEXP tauSEXP, SEXP BSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -810,7 +833,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const arma::vec& >::type wv_empir(wv_empirSEXP);
     Rcpp::traits::input_parameter< const arma::vec& >::type tau(tauSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type B(BSEXP);
-    __result = Rcpp::wrap(guess_initial(desc, objdesc, model_type, num_param, expect_diff, N, wv_empir, tau, B));
+    __result = Rcpp::wrap(guess_initial_old(desc, objdesc, model_type, num_param, expect_diff, N, wv_empir, tau, B));
     return __result;
 END_RCPP
 }
@@ -1464,6 +1487,30 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// ar1_to_gm
+arma::vec ar1_to_gm(arma::vec theta, double freq);
+RcppExport SEXP gmwm_ar1_to_gm(SEXP thetaSEXP, SEXP freqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< double >::type freq(freqSEXP);
+    __result = Rcpp::wrap(ar1_to_gm(theta, freq));
+    return __result;
+END_RCPP
+}
+// gm_to_ar1
+arma::vec gm_to_ar1(arma::vec theta, double freq);
+RcppExport SEXP gmwm_gm_to_ar1(SEXP thetaSEXP, SEXP freqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type theta(thetaSEXP);
+    Rcpp::traits::input_parameter< double >::type freq(freqSEXP);
+    __result = Rcpp::wrap(gm_to_ar1(theta, freq));
+    return __result;
+END_RCPP
+}
 // model_objdesc
 arma::field<arma::vec> model_objdesc(std::vector<std::string> desc);
 RcppExport SEXP gmwm_model_objdesc(SEXP descSEXP) {
@@ -1554,18 +1601,53 @@ BEGIN_RCPP
 END_RCPP
 }
 // wvar_cpp
-arma::mat wvar_cpp(const arma::field<arma::vec>& signal_modwt, bool robust, double eff, double alpha, std::string ci_type, std::string strWavelet);
-RcppExport SEXP gmwm_wvar_cpp(SEXP signal_modwtSEXP, SEXP robustSEXP, SEXP effSEXP, SEXP alphaSEXP, SEXP ci_typeSEXP, SEXP strWaveletSEXP) {
+arma::mat wvar_cpp(const arma::field<arma::vec>& signal_modwt_bw, bool robust, double eff, double alpha, std::string ci_type);
+RcppExport SEXP gmwm_wvar_cpp(SEXP signal_modwt_bwSEXP, SEXP robustSEXP, SEXP effSEXP, SEXP alphaSEXP, SEXP ci_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type signal_modwt(signal_modwtSEXP);
+    Rcpp::traits::input_parameter< const arma::field<arma::vec>& >::type signal_modwt_bw(signal_modwt_bwSEXP);
+    Rcpp::traits::input_parameter< bool >::type robust(robustSEXP);
+    Rcpp::traits::input_parameter< double >::type eff(effSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type ci_type(ci_typeSEXP);
+    __result = Rcpp::wrap(wvar_cpp(signal_modwt_bw, robust, eff, alpha, ci_type));
+    return __result;
+END_RCPP
+}
+// modwt_wvar_cpp
+arma::mat modwt_wvar_cpp(const arma::vec& signal, unsigned int nlevels, bool robust, double eff, double alpha, std::string ci_type, std::string strWavelet, std::string decomp);
+RcppExport SEXP gmwm_modwt_wvar_cpp(SEXP signalSEXP, SEXP nlevelsSEXP, SEXP robustSEXP, SEXP effSEXP, SEXP alphaSEXP, SEXP ci_typeSEXP, SEXP strWaveletSEXP, SEXP decompSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const arma::vec& >::type signal(signalSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nlevels(nlevelsSEXP);
     Rcpp::traits::input_parameter< bool >::type robust(robustSEXP);
     Rcpp::traits::input_parameter< double >::type eff(effSEXP);
     Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
     Rcpp::traits::input_parameter< std::string >::type ci_type(ci_typeSEXP);
     Rcpp::traits::input_parameter< std::string >::type strWavelet(strWaveletSEXP);
-    __result = Rcpp::wrap(wvar_cpp(signal_modwt, robust, eff, alpha, ci_type, strWavelet));
+    Rcpp::traits::input_parameter< std::string >::type decomp(decompSEXP);
+    __result = Rcpp::wrap(modwt_wvar_cpp(signal, nlevels, robust, eff, alpha, ci_type, strWavelet, decomp));
+    return __result;
+END_RCPP
+}
+// batch_modwt_wvar_cpp
+arma::field<arma::mat> batch_modwt_wvar_cpp(const arma::mat& signal, unsigned int nlevels, bool robust, double eff, double alpha, std::string ci_type, std::string strWavelet, std::string decomp);
+RcppExport SEXP gmwm_batch_modwt_wvar_cpp(SEXP signalSEXP, SEXP nlevelsSEXP, SEXP robustSEXP, SEXP effSEXP, SEXP alphaSEXP, SEXP ci_typeSEXP, SEXP strWaveletSEXP, SEXP decompSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< const arma::mat& >::type signal(signalSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type nlevels(nlevelsSEXP);
+    Rcpp::traits::input_parameter< bool >::type robust(robustSEXP);
+    Rcpp::traits::input_parameter< double >::type eff(effSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type ci_type(ci_typeSEXP);
+    Rcpp::traits::input_parameter< std::string >::type strWavelet(strWaveletSEXP);
+    Rcpp::traits::input_parameter< std::string >::type decomp(decompSEXP);
+    __result = Rcpp::wrap(batch_modwt_wvar_cpp(signal, nlevels, robust, eff, alpha, ci_type, strWavelet, decomp));
     return __result;
 END_RCPP
 }

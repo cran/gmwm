@@ -19,10 +19,6 @@
 
 #include "allan_variance.h"
 
-using namespace Rcpp;
-
-
-
 /* ----------------------- Start Allan Variance Functions ------------------------ */
 
 //' @title Compute Tau-Overlap Allan Variance
@@ -56,6 +52,7 @@ using namespace Rcpp;
 //' random.walk = cumsum(0.1*rnorm(N, 0, 2))
 //' combined.ts = white.noise+random.walk
 //' av_mat = avar_to_cpp(combined.ts)
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat avar_to_cpp(arma::vec x) {
   
@@ -128,6 +125,7 @@ arma::mat avar_to_cpp(arma::vec x) {
 //' random.walk = cumsum(0.1*rnorm(N, 0, 2))
 //' combined.ts = white.noise+random.walk
 //' av_mat = avar_mo_cpp(combined.ts)
+//' @keywords internal
 // [[Rcpp::export]]
 arma::mat avar_mo_cpp(arma::vec x) {
   

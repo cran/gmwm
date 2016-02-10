@@ -11,8 +11,8 @@ Generalized Method of Wavelet Moments (GMWM) is an estimation technique for the 
 \tabular{ll}{
 Package: \tab GMWM\cr
 Type: \tab Package\cr
-Version: \tab 1.0.0\cr
-Date: \tab 2015-11-06\cr
+Version: \tab 1.0.1\cr
+Date: \tab 2015-12-28\cr
 License: \tab CC BY-NC-SA 4.0\cr
 }
 }
@@ -34,19 +34,6 @@ We would like to thank the following individuals for their contributions and adv
 }
 
 Furthermore, we are also greatful to Dr. Jan Skaloud and Philipp Clausen of Geodetic Engineering Laboratory (TOPO), Swiss Federal Institute of Technology Lausanne (EPFL), topo.epfl.ch, Tel:+41(0)21 693 27 55 for providing data, which motivated the research and development of this package.
-}
-
-\section{Licensing}{
-
-
-The package is licensed under under the Creative Common Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA) 
-
-The software is copyrighted 2015 with the copyright holders being:
-\itemize{
- \item James Balamuta
- \item Stephane Guerrier
- \item Roberto Molinari
-}
 }
 \author{
 James Balamuta \email{balamut2@illinois.edu},
